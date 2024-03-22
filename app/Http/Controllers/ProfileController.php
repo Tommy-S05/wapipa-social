@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,19 +22,19 @@ class ProfileController extends Controller
         return Inertia::render('Profile/View', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
-            'user' => $user
+            'user' => new UserResource($user)
         ]);
     }
     /**
      * Display the user's profile form.
      */
-//    public function edit(Request $request): Response
-//    {
-//        return Inertia::render('Profile/Edit', [
-//            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-//            'status' => session('status'),
-//        ]);
-//    }
+    //    public function edit(Request $request): Response
+    //    {
+    //        return Inertia::render('Profile/Edit', [
+    //            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+    //            'status' => session('status'),
+    //        ]);
+    //    }
 
     /**
      * Update the user's profile information.
@@ -40,7 +43,7 @@ class ProfileController extends Controller
     {
         $request->user()->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
+        if($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }
 
@@ -68,5 +71,28 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    public function updateImage(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'cover' => ['image', 'nullable', 'mimes:jpeg,jpg,png,webp'],
+            'avatar' => ['image', 'nullable']
+        ]);
+        $user = $request->user();
+
+        /** @var UploadedFile $cover */
+        $cover = $data['cover'] ?? null;
+        $avatar = $data['avatar'] ?? null;
+        if($cover) {
+            $folderName = 'covers/' . $user->id;
+            $path = Storage::disk('public')->put($folderName, $cover);
+//            $path = $cover->store($folderName, 'public');
+            $user->update(['cover_path' => $path]);
+        }
+
+//        session('success', 'Cover image has been updates');
+
+        return back()->with('status', 'cover-image-update');
     }
 }

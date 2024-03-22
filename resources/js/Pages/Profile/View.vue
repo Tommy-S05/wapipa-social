@@ -1,12 +1,14 @@
 <script setup>
 
-import {Head, usePage} from "@inertiajs/vue3";
+import {Head, useForm, usePage} from "@inertiajs/vue3";
 import {TabGroup, TabList, Tab, TabPanels, TabPanel} from '@headlessui/vue'
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import TabItem from "@/Pages/Profile/Partials/TabItem.vue";
 import Edit from "@/Pages/Profile/Edit.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import {computed} from "vue";
+import {XMarkIcon, CheckCircleIcon} from '@heroicons/vue/24/solid'
+import {CameraIcon} from '@heroicons/vue/24/outline'
+import {computed, ref} from "vue";
 
 
 const props = defineProps({
@@ -18,12 +20,51 @@ const props = defineProps({
     },
     user: {
         type: Object
-    }
+    },
+    errors: Object
 });
+
+const imagesForm = useForm({
+    cover: null,
+    avatar: null
+})
 
 const authUser = usePage().props.auth.user
 
 const isMyProfile = computed(() => authUser && authUser.id === props.user.id)
+const coverImageSrc = ref('');
+const showNotification = ref(false)
+
+function onCoverChange(event) {
+    imagesForm.cover = event.target.files[0];
+    if (imagesForm.cover) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            coverImageSrc.value = reader.result;
+        }
+        reader.readAsDataURL(imagesForm.cover);
+    }
+}
+
+function cancelCoverImage() {
+    imagesForm.cover = null;
+    coverImageSrc.value = null;
+}
+
+function submitCoverImage() {
+    imagesForm.post(route('profile.updateImage'), {
+        onSuccess: () => {
+            showNotification.value = true;
+            cancelCoverImage();
+            setTimeout(() => {
+                showNotification.value = false;
+            }, 5000);
+        },
+        onError: () => {
+
+        }
+    })
+}
 
 </script>
 
@@ -31,12 +72,53 @@ const isMyProfile = computed(() => authUser && authUser.id === props.user.id)
     <Head title="Profile"/>
 
     <AuthenticatedLayout>
-        <div class="w-[768px] mx-auto h-full overflow-auto">
-            <div class="relative bg-white">
-                <img src="https://www.prodraw.net/fb_cover/images/fb_cover_65.jpg"
-                     alt=""
+        <div class="max-w-[768px] mx-auto h-full overflow-auto">
+            <div
+                v-show="showNotification && status === 'cover-image-update'"
+                class="my-2 py-2 px-3 font-medium text-sm bg-emerald-500 text-white"
+            >
+                Your cover image has been updated
+            </div>
+            <div
+                v-if="errors.cover"
+                class="my-2 py-2 px-3 font-medium text-sm bg-red-400 text-white"
+            >
+                {{ errors.cover }}
+            </div>
+            <div class="group relative bg-white">
+                <!--                <img src="https://www.prodraw.net/fb_cover/images/fb_cover_65.jpg"-->
+                <img :src="coverImageSrc || user.cover_url || '/img/default_cover.webp'"
+                     alt="Cover image"
                      class="h-[200px] w-full object-cover"
                 />
+                <div class="absolute top-2 right-2">
+                    <button v-if="!coverImageSrc"
+                            class="bg-gray-50 hover:bg-gray-100 text-gray-800 py-1 px-2 text-xs flex items-center opacity-0 group-hover:opacity-100"
+                    >
+                        <CameraIcon class="w-3 h-3 mr-2"/>
+                        Update Cover Image
+                        <input type="file"
+                               class="absolute left-0 top-0 bottom-0 right-0 cursor-pointer opacity-0"
+                               @change="onCoverChange"
+                        />
+                    </button>
+                    <div v-else class="flex space-x-2 bg-white p-2 opacity-0 group-hover:opacity-100">
+                        <button
+                            class="bg-gray-50 hover:bg-gray-100 text-gray-800 py-1 px-2 text-xs flex items-center"
+                            @click="cancelCoverImage"
+                        >
+                            <XMarkIcon class="w-3 h-3 mr-2"/>
+                            Cancel
+                        </button>
+                        <button
+                            class="bg-gray-800 hover:bg-gray-900 text-gray-100 py-1 px-2 text-xs flex items-center"
+                            @click="submitCoverImage"
+                        >
+                            <CheckCircleIcon class="w-3 h-3 mr-2"/>
+                            Submit
+                        </button>
+                    </div>
+                </div>
                 <div class="flex">
                     <img src="https://cdn.iconscout.com/icon/free/png-256/free-avatar-370-456322.png?f=webp"
                          alt=""
