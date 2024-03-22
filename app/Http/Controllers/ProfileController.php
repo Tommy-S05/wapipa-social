@@ -86,7 +86,7 @@ class ProfileController extends Controller
         $avatar = $data['avatar'] ?? null;
         if($cover) {
             $oldPath = $user->cover_path;
-            $folderName = $user->username . '/cover';
+            $folderName = 'user-' . $user->id . '/cover';
             $path = Storage::disk('public')->put($folderName, $cover);
             //            $path = $cover->store($folderName, 'public');
             $user->update(['cover_path' => $path]);
