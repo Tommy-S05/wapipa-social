@@ -85,13 +85,17 @@ class ProfileController extends Controller
         $cover = $data['cover'] ?? null;
         $avatar = $data['avatar'] ?? null;
         if($cover) {
-            $folderName = 'covers/' . $user->id;
+            $oldPath = $user->cover_path;
+            $folderName = $user->username . '/cover';
             $path = Storage::disk('public')->put($folderName, $cover);
-//            $path = $cover->store($folderName, 'public');
+            //            $path = $cover->store($folderName, 'public');
             $user->update(['cover_path' => $path]);
+            if($oldPath) {
+                Storage::disk('public')->delete($oldPath);
+            }
         }
 
-//        session('success', 'Cover image has been updates');
+        //        session('success', 'Cover image has been updates');
 
         return back()->with('status', 'cover-image-update');
     }
