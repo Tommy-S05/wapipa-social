@@ -1,21 +1,42 @@
 <script setup>
 
 import {ref} from "vue";
+import TextareaInput from "@/Components/TextareaInput.vue";
+import {useForm} from "@inertiajs/vue3";
 
 const postCreating = ref(false)
+const newPostForm = useForm({
+    body: ''
+})
+
+const submit = () => {
+    newPostForm.post(route('post.store'), {
+        onSuccess: () => {
+            newPostForm.reset();
+        }
+    })
+}
 </script>
 
 <template>
     <div class="p-4 bg-white rounded-lg border mb-3">
-        <div
-            @click="postCreating = !postCreating"
-            class="py-3 px-2 text-gray-400 border border-2 border-gray-200 rounded mb-3"
-        >
-            Click here to create new post
-        </div>
+<!--        <div-->
+<!--            @click="postCreating = !postCreating"-->
+<!--            class="py-3 px-2 text-gray-400 border border-2 border-gray-200 rounded mb-3"-->
+<!--        >-->
+<!--            Click here to create new post-->
+<!--        </div>-->
+        <TextareaInput
+            @click="postCreating = true"
+            class="mb-3 w-full"
+            placeholder="Click here to create new post"
+            v-model="newPostForm.body"
+            :auto-resize="true"
+            :rows="1"
+        />
         <div v-if="postCreating" class="flex justify-between">
             <button
-                type="submit"
+                type="button"
                 class="relative rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
                 Attach Files
@@ -25,6 +46,7 @@ const postCreating = ref(false)
                 />
             </button>
             <button
+                @click="submit"
                 type="submit"
                 class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >

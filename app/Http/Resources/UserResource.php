@@ -20,8 +20,8 @@ class UserResource extends JsonResource
             "name" => $this->name,
             "email" => $this->email,
             "email_verified_at" => $this->email_verified_at,
-            "created_at" => $this->created_at,
-            "updated_at" => $this->updated_at,
+            "created_at" => $this->created_at->format('d-m-Y H:i:s'),
+            "updated_at" => $this->updated_at->format('d-m-Y H:i:s'),
             "username" => $this->username,
             "cover_url" => $this->cover_path ? Storage::url($this->cover_path) : null,
             "avatar_url" => $this->avatar_path ? Storage::url($this->avatar_path) : null
