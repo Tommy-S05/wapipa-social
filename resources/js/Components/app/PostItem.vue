@@ -16,7 +16,7 @@ function isImage(attachment) {
         <div class="flex items-center gap-2 mb-3">
             <a href="javascript:void(0)">
                 <img
-                    :src="post.user.avatar_url"
+                    :src="post.user.avatar_url || '/img/default_avatar.webp'"
                     class="w-10 rounded-full border border-2 hover:border-blue-500 transition-all"
                 />
             </a>
