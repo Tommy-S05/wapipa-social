@@ -1,11 +1,21 @@
 <script setup>
 import PostItem from "@/Components/app/PostItem.vue";
+import PostModal from "@/Components/app/PostModal.vue";
+import {ref} from "vue";
 
 defineProps({
     posts: {
         type: Array
     }
-})
+});
+
+const showEditModal = ref(false);
+const editPost = ref({});
+
+function openEditModal(post){
+    editPost.value = post;
+    showEditModal.value = true;
+}
 
 const post1 = {
     user: {
@@ -59,11 +69,10 @@ const post2 = {
 
 <template>
     <div class="space-y-4 mb-3 flex-1 overflow-auto">
-        <PostItem v-for="post of posts" :key="post.id" :post="post"/>
-<!--        <PostItem :post="post1"/>-->
-<!--        <PostItem :post="post2"/>-->
-<!--        <PostItem :post="post1"/>-->
+        <PostItem v-for="post of posts" :key="post.id" :post="post" @editClick="openEditModal"/>
     </div>
+
+    <PostModal :post="editPost" v-model="showEditModal"/>
 </template>
 
 <style scoped>

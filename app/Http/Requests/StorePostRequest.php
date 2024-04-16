@@ -22,12 +22,13 @@ class StorePostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['nullable', 'string']
+            'body' => ['nullable', 'string'],
+//            'user_id' => ['numeric']
         ];
     }
 
-    protected function passedValidation(): void
-    {
-        $this->merge(['user_id' => auth()->user()->id]);
-    }
+//    protected function passedValidation(): void
+//    {
+//        $this->merge(['user_id' => auth()->user()->id]);
+//    }
 }

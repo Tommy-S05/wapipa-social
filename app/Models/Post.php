@@ -28,8 +28,15 @@ class Post extends Model
      */
     protected static function booted(): void
     {
-        static::creating(function (Post $post) {
+        static::creating(function(Post $post) {
             $post->user_id = auth()->id();
+        });
+
+        static::updating(function(Post $post) {
+            // Asegúrate de que el user_id no se sobrescriba durante la actualización
+            if(!$post->isDirty('user_id')) {
+                $post->user_id = auth()->id();
+            }
         });
     }
 
