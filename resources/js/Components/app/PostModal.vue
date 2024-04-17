@@ -11,6 +11,13 @@ import TextareaInput from "@/Components/TextareaInput.vue";
 import {XMarkIcon} from '@heroicons/vue/24/solid';
 import {useForm} from "@inertiajs/vue3";
 import PostUserHeader from "@/Components/app/PostUserHeader.vue";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+// import {ClassicEditor} from '@ckeditor/ckeditor5-editor-classic';
+
+// import {Essentials} from '@ckeditor/ckeditor5-essentials';
+// import {Bold, Italic} from '@ckeditor/ckeditor5-basic-styles';
+// import {Link} from '@ckeditor/ckeditor5-link';
+// import {Paragraph} from '@ckeditor/ckeditor5-paragraph';
 
 const props = defineProps({
     post: {
@@ -21,6 +28,31 @@ const props = defineProps({
         type: Boolean,
     }
 });
+
+const editor = ClassicEditor;
+const editorConfig = {
+    toolbar: {
+        items: [
+            'undo',
+            // 'redo',
+            '|',
+            'heading',
+            '|',
+            'bold',
+            'italic',
+            '|',
+            'link',
+            '|',
+            'bulletedList',
+            'numberedList',
+            '|',
+            'outdent',
+            'indent',
+            '|',
+            'blockQuote'
+        ]
+    }
+};
 
 const show = computed({
     get: () => props.modelValue,
@@ -101,11 +133,16 @@ watch(() => props.post, () => {
                                 </DialogTitle>
                                 <div class="p-4">
                                     <PostUserHeader :post="post" :show-time="false" class="mb-4"/>
-                                    <TextareaInput
+                                    <ckeditor
+                                        :editor="editor"
                                         v-model="updatePostForm.body"
-                                        class="mb-3 w-full"
-                                        :auto-resize="true"
+                                        :config="editorConfig"
                                     />
+<!--                                    <TextareaInput-->
+<!--                                        v-model="updatePostForm.body"-->
+<!--                                        class="mb-3 w-full"-->
+<!--                                        :auto-resize="true"-->
+<!--                                    />-->
                                 </div>
 
                                 <div class="py-3 px-4">
