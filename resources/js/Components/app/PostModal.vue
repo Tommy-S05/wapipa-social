@@ -7,17 +7,10 @@ import {
     DialogPanel,
     DialogTitle,
 } from '@headlessui/vue'
-import TextareaInput from "@/Components/TextareaInput.vue";
 import {XMarkIcon} from '@heroicons/vue/24/solid';
 import {useForm} from "@inertiajs/vue3";
 import PostUserHeader from "@/Components/app/PostUserHeader.vue";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
-// import {ClassicEditor} from '@ckeditor/ckeditor5-editor-classic';
-
-// import {Essentials} from '@ckeditor/ckeditor5-essentials';
-// import {Bold, Italic} from '@ckeditor/ckeditor5-basic-styles';
-// import {Link} from '@ckeditor/ckeditor5-link';
-// import {Paragraph} from '@ckeditor/ckeditor5-paragraph';
 
 const props = defineProps({
     post: {
@@ -65,23 +58,33 @@ function closeModal() {
     show.value = false
 }
 
-const updatePostForm = useForm({
+const postForm = useForm({
     id: null,
     body: ''
 })
 
 const submit = () => {
-    updatePostForm.put(route('post.update', props.post.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            closeModal();
-        }
-    })
+    if (postForm.id) {
+        postForm.put(route('post.update', props.post.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeModal();
+            }
+        });
+    } else {
+        postForm.post(route('post.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeModal();
+                postForm.reset()
+            }
+        });
+    }
 }
 
 watch(() => props.post, () => {
-    updatePostForm.id = props.post.id;
-    updatePostForm.body = props.post.body;
+    postForm.id = props.post.id;
+    postForm.body = props.post.body;
 });
 
 </script>
@@ -123,7 +126,7 @@ watch(() => props.post, () => {
                                     as="h3"
                                     class="flex items-center justify-between py-3 px-4 font-medium text-gray-900 bg-gray-100"
                                 >
-                                    Update Post
+                                    {{ postForm.id ? 'Update Post' : 'Create Post' }}
                                     <button
                                         @click="closeModal"
                                         class="w-8 h-8 rounded-full hover:bg-black/5 transition flex items-center justify-center"
@@ -135,11 +138,11 @@ watch(() => props.post, () => {
                                     <PostUserHeader :post="post" :show-time="false" class="mb-4"/>
                                     <ckeditor
                                         :editor="editor"
-                                        v-model="updatePostForm.body"
+                                        v-model="postForm.body"
                                         :config="editorConfig"
                                     />
 <!--                                    <TextareaInput-->
-<!--                                        v-model="updatePostForm.body"-->
+<!--                                        v-model="postForm.body"-->
 <!--                                        class="mb-3 w-full"-->
 <!--                                        :auto-resize="true"-->
 <!--                                    />-->
