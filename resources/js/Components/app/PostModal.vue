@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {
     TransitionRoot,
     TransitionChild,
@@ -7,10 +7,11 @@ import {
     DialogPanel,
     DialogTitle,
 } from '@headlessui/vue'
-import {XMarkIcon} from '@heroicons/vue/24/solid';
+import {XMarkIcon, PaperClipIcon, BookmarkIcon, DocumentIcon} from '@heroicons/vue/24/solid';
 import {useForm} from "@inertiajs/vue3";
 import PostUserHeader from "@/Components/app/PostUserHeader.vue";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import {isImage} from "@/helpers.js";
 
 const props = defineProps({
     post: {
@@ -47,6 +48,15 @@ const editorConfig = {
     }
 };
 
+/**
+ * {
+ *     file: File,
+ *     url: String
+ * }
+ * @type {Ref<UnwrapRef<*[]>>}
+ */
+const attachmentFiles = ref([]);
+
 const show = computed({
     get: () => props.modelValue,
     set: (newValue) => emit('update:modelValue', newValue)
@@ -55,7 +65,9 @@ const show = computed({
 const emit = defineEmits(['update:modelValue'])
 
 function closeModal() {
-    show.value = false
+    show.value = false;
+    postForm.reset();
+    attachmentFiles.value = [];
 }
 
 const postForm = useForm({
@@ -80,6 +92,40 @@ const submit = () => {
             }
         });
     }
+}
+
+async function onAttachmentChoose(event) {
+    for (const file of event.target.files) {
+        const myFile = {
+            file,
+            url: await readFile(file)
+        }
+        attachmentFiles.value.push(myFile)
+    }
+
+    event.target.value = null;
+    console.log(attachmentFiles.value)
+}
+
+async function readFile(file) {
+    return new Promise((res, rej) => {
+        if (isImage(file)){
+            const reader = new FileReader();
+            reader.onload = () => {
+                res(reader.result);
+            }
+            reader.onerror = rej;
+
+            reader.readAsDataURL(file);
+        } else {
+            res(null);
+        }
+    })
+
+}
+
+function removeFile(myFile) {
+    attachmentFiles.value = attachmentFiles.value.filter((file) => file !== myFile)
 }
 
 watch(() => props.post, () => {
@@ -141,19 +187,58 @@ watch(() => props.post, () => {
                                         v-model="postForm.body"
                                         :config="editorConfig"
                                     />
-<!--                                    <TextareaInput-->
-<!--                                        v-model="postForm.body"-->
-<!--                                        class="mb-3 w-full"-->
-<!--                                        :auto-resize="true"-->
-<!--                                    />-->
+
+                                    <div class="grid grid-cols-2 gap-3 my-3">
+                                        <template v-for="(myFile, index) of attachmentFiles">
+                                            <div
+                                                class="relative group bg-blue-100 aspect-square flex flex-col items-center justify-center text-gray-500"
+                                            >
+
+                                                <!--Delete bottom-->
+                                                <button
+                                                    @click="removeFile(myFile)"
+                                                    class="w-7 h-7 flex items-center justify-center text-white bg-gray-700 hover:bg-gray-800 rounded-full absolute right-2 top-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-all"
+                                                >
+                                                    <XMarkIcon class="w-4 h-4"/>
+                                                </button>
+
+                                                <img v-if="isImage(myFile.file)"
+                                                     :src="myFile.url"
+                                                     alt=""
+                                                     class="aspect-square object-cover"
+                                                />
+
+                                                <template v-else>
+                                                    <DocumentIcon class="w-10 h-10 mb-3"/>
+                                                    <small class="text-center">
+                                                        {{ myFile.file.name }}
+                                                    </small>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
 
-                                <div class="py-3 px-4">
+                                <div class="flex gap-2 py-3 px-4">
+                                    <label
+                                        type="button"
+                                        class="relative flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 w-full cursor-pointer"
+                                    >
+                                        <PaperClipIcon class="w-4 h-4 mr-2"/>
+                                        Attach Files
+                                        <input
+                                            type="file"
+                                            multiple
+                                            @change="onAttachmentChoose"
+                                            class="absolute left-0 top-0 right-0 bottom-0 cursor-pointer opacity-0 hidden"
+                                        />
+                                    </label>
                                     <button
                                         type="button"
-                                        class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 w-full"
+                                        class="flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 w-full"
                                         @click="submit"
                                     >
+                                        <BookmarkIcon class="w-4 h-4 mr-2"/>
                                         Submit
                                     </button>
                                 </div>
