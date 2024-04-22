@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
+use App\Models\PostAttachment;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -40,19 +42,7 @@ class PostController extends Controller
             /** @var UploadedFile[] $files */
             $files = $data['attachments'] ?? [];
 
-            foreach($files as $file) {
-                $folderName = "user-$user->id/post-$post->id/attachments";
-                $path = Storage::disk('public')->put($folderName, $file);
-                $allFilePaths[] = $path;
-
-                $post->attachments()->create([
-                    'name' => $file->getClientOriginalName(),
-                    'path' => $path,
-                    'mime' => $file->getMimeType(),
-                    'size' => $file->getSize(),
-                    'created_by' => $user->id
-                ]);
-            }
+            $this->createFiles($post, $user, $files);
 
             DB::commit();
 
@@ -79,7 +69,38 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, Post $post): RedirectResponse
     {
-        $post->update($request->validated());
+        $data = $request->validated();
+        $user = $request->user();
+
+        DB::beginTransaction();
+        $allFilePaths = [];
+        try {
+            $post->update($data);
+
+            /** @var UploadedFile[] $files */
+            $files = $data['attachments'] ?? [];
+
+            $deleted_files = $data['deleted_files_ids'] ?? [];
+
+            $attachments = PostAttachment::where('post_id', $post->id)
+                ->whereIn('id', $deleted_files)
+                ->get();
+
+            foreach($attachments as $attachment) {
+                $attachment->delete();
+            }
+
+            $this->createFiles($post, $user, $files);
+
+            DB::commit();
+
+        } catch (\Exception $exception) {
+            foreach($allFilePaths as $filePath){
+                Storage::disk('public')->delete($filePath);
+            }
+            DB::rollBack();
+        }
+
         return Redirect::back();
     }
 
@@ -98,5 +119,22 @@ class PostController extends Controller
         $post->delete();
 
         return Redirect::back();
+    }
+
+    private function createFiles(Post $post, User $user, $files)
+    {
+        foreach($files as $file) {
+            $folderName = "user-$user->id/post-$post->id/attachments";
+            $path = Storage::disk('public')->put($folderName, $file);
+            $allFilePaths[] = $path;
+
+            $post->attachments()->create([
+                'name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'mime' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'created_by' => $user->id
+            ]);
+        }
     }
 }

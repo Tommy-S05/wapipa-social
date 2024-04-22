@@ -35,7 +35,7 @@ function deletePost() {
     <div class="bg-white border rounded p-4 shadow">
         <header class="flex items-center justify-between mb-3">
             <PostUserHeader :post="post"/>
-            <Menu as="div" class="relative inline-block text-left">
+            <Menu as="div" class="relative inline-block text-left z-20">
                 <div>
                     <MenuButton
                         class="w-8 h-8 rounded-full hover:bg-black/5 transition flex items-center justify-center"
@@ -122,7 +122,7 @@ function deletePost() {
                 >
                     <!--Download-->
                     <button
-                        class="w-8 h-8 z-20 flex items-center justify-center text-gray-100 bg-gray-700 hover:bg-gray-800 rounded absolute right-2 top-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-all"
+                        class="w-8 h-8 z-10 flex items-center justify-center text-gray-100 bg-gray-700 hover:bg-gray-800 rounded absolute right-2 top-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-all"
                     >
                         <ArrowDownTrayIcon class="w-4 h-4"/>
                     </button>
