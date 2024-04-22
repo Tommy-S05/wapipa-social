@@ -66,16 +66,22 @@ const emit = defineEmits(['update:modelValue'])
 
 function closeModal() {
     show.value = false;
+    resetModal();
+}
+
+function resetModal() {
     postForm.reset();
     attachmentFiles.value = [];
 }
 
 const postForm = useForm({
     id: null,
-    body: ''
+    body: '',
+    attachments: []
 })
 
 const submit = () => {
+    postForm.attachments = attachmentFiles.value.map((myFile) => myFile.file);
     if (postForm.id) {
         postForm.put(route('post.update', props.post.id), {
             preserveScroll: true,
@@ -88,7 +94,6 @@ const submit = () => {
             preserveScroll: true,
             onSuccess: () => {
                 closeModal();
-                postForm.reset()
             }
         });
     }
@@ -139,7 +144,7 @@ watch(() => props.post, () => {
     <teleport to="body">
         <TransitionRoot appear :show="show" as="template">
 
-            <Dialog as="div" @close="closeModal" class="relative z-10">
+            <Dialog as="div" @close="closeModal" class="relative z-40">
                 <TransitionChild
                     as="template"
                     enter="duration-300 ease-out"
@@ -188,7 +193,12 @@ watch(() => props.post, () => {
                                         :config="editorConfig"
                                     />
 
-                                    <div class="grid grid-cols-2 gap-3 my-3">
+                                    <div
+                                        class="grid gap-3 my-3"
+                                        :class="[
+                                            attachmentFiles.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
+                                        ]"
+                                    >
                                         <template v-for="(myFile, index) of attachmentFiles">
                                             <div
                                                 class="relative group bg-blue-100 aspect-square flex flex-col items-center justify-center text-gray-500"

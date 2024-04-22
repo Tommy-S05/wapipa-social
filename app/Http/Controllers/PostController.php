@@ -7,8 +7,11 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -27,9 +30,38 @@ class PostController extends Controller
     public function store(StorePostRequest $request): RedirectResponse
     {
         $data = $request->validated();
-//        $data['user_id'] = Auth::id();
+        $user = $request->user();
 
-        Post::create($data);
+        DB::beginTransaction();
+        $allFilePaths = [];
+        try {
+            $post = Post::create($data);
+
+            /** @var UploadedFile[] $files */
+            $files = $data['attachments'] ?? [];
+
+            foreach($files as $file) {
+                $folderName = "user-$user->id/post-$post->id/attachments";
+                $path = Storage::disk('public')->put($folderName, $file);
+                $allFilePaths[] = $path;
+
+                $post->attachments()->create([
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'mime' => $file->getMimeType(),
+                    'size' => $file->getSize(),
+                    'created_by' => $user->id
+                ]);
+            }
+
+            DB::commit();
+
+        } catch (\Exception $exception) {
+            foreach($allFilePaths as $filePath){
+                Storage::disk('public')->delete($filePath);
+            }
+            DB::rollBack();
+        }
 
         return Redirect::back();
     }
@@ -59,7 +91,7 @@ class PostController extends Controller
         // TODO
         $id = Auth::id();
 
-        if($post->user_id !== $id){
+        if($post->user_id !== $id) {
             return response("You don't have permission to delete this post", 403);
         }
 
