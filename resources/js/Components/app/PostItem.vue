@@ -121,11 +121,12 @@ function deletePost() {
                     class="relative group bg-blue-100 aspect-square flex flex-col items-center justify-center text-gray-500"
                 >
                     <!--Download-->
-                    <button
+                    <a
+                        :href="route('post.download', attachment.id)"
                         class="w-8 h-8 z-10 flex items-center justify-center text-gray-100 bg-gray-700 hover:bg-gray-800 rounded absolute right-2 top-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-all"
                     >
                         <ArrowDownTrayIcon class="w-4 h-4"/>
-                    </button>
+                    </a>
 
                     <img v-if="isImage(attachment)"
                          :src="attachment.url"

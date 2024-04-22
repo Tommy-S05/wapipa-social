@@ -121,12 +121,21 @@ class PostController extends Controller
         return Redirect::back();
     }
 
+    public function download(PostAttachment $attachment)
+    {
+//        dd($attachment);
+        // TODO check if the user has permission to download that attachment
+        if(Storage::disk('public')->exists($attachment->path)) {
+            return Storage::disk('public')->download($attachment->path, $attachment->name);
+        }
+        return Redirect::back();
+    }
+
     private function createFiles(Post $post, User $user, $files)
     {
         foreach($files as $file) {
             $folderName = "user-$user->id/post-$post->id/attachments";
             $path = Storage::disk('public')->put($folderName, $file);
-            $allFilePaths[] = $path;
 
             $post->attachments()->create([
                 'name' => $file->getClientOriginalName(),
