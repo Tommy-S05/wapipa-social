@@ -12,7 +12,7 @@ const props = defineProps({
     post: Object
 })
 
-const emit = defineEmits(['editClick'])
+const emit = defineEmits(['editClick', 'attachmentClick'])
 
 function openEditModalEmit() {
     emit('editClick', props.post)
@@ -27,6 +27,10 @@ function deletePost() {
     // if (window.confirm('Are you sure you want to delete this post?')) {
     //     router.delete(route('post.destroy', props.post.id))
     // }
+}
+
+function openAttachment(index) {
+    emit('attachmentClick', props.post, index);
 }
 
 </script>
@@ -118,7 +122,8 @@ function deletePost() {
         >
             <template v-for="(attachment, index) of post.attachments.slice(0, 4)">
                 <div
-                    class="relative group bg-blue-100 aspect-square flex flex-col items-center justify-center text-gray-500"
+                    @click="openAttachment(index)"
+                    class="relative group bg-blue-100 aspect-square flex flex-col items-center justify-center text-gray-500 cursor-pointer"
                 >
                     <!--Download-->
                     <a
@@ -134,12 +139,14 @@ function deletePost() {
                          class="aspect-square object-cover"
                     />
 
-                    <template v-else>
+                    <div v-else
+                         class="flex flex-col items-center justify-center"
+                    >
                         <DocumentIcon class="w-10 h-10 mb-3"/>
-                        <small>
+                        <small class="text-center">
                             {{ attachment.name }}
                         </small>
-                    </template>
+                    </div>
 
                     <div v-if="index === 3 && post.attachments.length > 4"
                          class="absolute left-0 top-0 right-0 bottom-0 z-10 bg-black/60 text-white text-center flex items-center justify-center text-2xl">
