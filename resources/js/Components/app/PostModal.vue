@@ -8,7 +8,7 @@ import {
     DialogTitle,
 } from '@headlessui/vue'
 import {XMarkIcon, PaperClipIcon, BookmarkIcon, DocumentIcon, ArrowUturnLeftIcon} from '@heroicons/vue/24/solid';
-import {useForm} from "@inertiajs/vue3";
+import {useForm, usePage} from "@inertiajs/vue3";
 import PostUserHeader from "@/Components/app/PostUserHeader.vue";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import {isImage} from "@/helpers.js";
@@ -22,6 +22,8 @@ const props = defineProps({
         type: Boolean,
     }
 });
+
+const attachmentExtensions = usePage().props.attachmentsExtensions;
 
 const editor = ClassicEditor;
 const editorConfig = {
@@ -56,6 +58,8 @@ const editorConfig = {
  * @type {Ref<UnwrapRef<*[]>>}
  */
 const attachmentFiles = ref([]);
+const attachmentErrors = ref([]);
+const showExtensionsText = ref(false);
 
 const show = computed({
     get: () => props.modelValue,
@@ -77,7 +81,9 @@ function closeModal() {
 function resetModal() {
     postForm.reset();
     attachmentFiles.value = [];
-    props.post.attachments.forEach(file => file.deleted = false)
+    attachmentErrors.value = [];
+    showExtensionsText.value = false;
+    props.post?.attachments?.forEach(file => file.deleted = false)
 }
 
 const postForm = useForm({
@@ -96,6 +102,9 @@ const submit = () => {
             preserveScroll: true,
             onSuccess: () => {
                 closeModal();
+            },
+            onError: (errors) => {
+                processErrors(errors);
             }
         });
     } else {
@@ -103,13 +112,30 @@ const submit = () => {
             preserveScroll: true,
             onSuccess: () => {
                 closeModal();
+            },
+            onError: (errors) => {
+                processErrors(errors);
             }
         });
     }
 }
 
+function processErrors(errors) {
+    for (const error in errors) {
+
+        if (error.includes('.')) {
+            const [key, index] = error.split('.');
+            attachmentErrors.value[index] = errors[error];
+        }
+    }
+}
+
 async function onAttachmentChoose(event) {
     for (const file of event.target.files) {
+        const extension = file.name.split('.').pop().toLowerCase();
+        if (!attachmentExtensions.includes(extension)) {
+            showExtensionsText.value = true;
+        }
         const myFile = {
             file,
             url: await readFile(file)
@@ -211,15 +237,22 @@ watch(() => props.post, () => {
                                         :config="editorConfig"
                                     />
 
+                                    <div v-if="showExtensionsText"
+                                        class="border-l-4 border-amber-500 py-2 px-3 bg-amber-100 mt-3 text-gray-800">
+                                        Files must be one of the following extensions: <br/>
+                                        <strong>{{ attachmentExtensions.join(', ') }}.</strong>
+                                    </div>
+
                                     <div
                                         class="grid gap-3 my-3"
                                         :class="[
                                             computedAttachments.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
                                         ]"
                                     >
-                                        <template v-for="(myFile, index) of computedAttachments">
+                                        <div v-for="(myFile, index) of computedAttachments">
                                             <div
-                                                class="relative group bg-blue-100 aspect-square flex flex-col items-center justify-center text-gray-500"
+                                                class="relative group bg-blue-100 aspect-square flex flex-col items-center justify-center text-gray-500 border-2"
+                                                :class="attachmentErrors[index] ? 'border-red-500' : ''"
                                             >
 
                                                 <!--Delete/Undo bottom-->
@@ -242,7 +275,7 @@ watch(() => props.post, () => {
 
                                                 <!--For other types of files-->
                                                 <div v-else
-                                                     class="flex flex-col items-center justify-center"
+                                                     class="flex flex-col items-center justify-center px-3"
                                                      :class="myFile.deleted ? 'opacity-50' : ''"
                                                 >
                                                     <DocumentIcon class="w-10 h-10 mb-3"/>
@@ -258,7 +291,11 @@ watch(() => props.post, () => {
                                                     To be deleted
                                                 </div>
                                             </div>
-                                        </template>
+
+                                            <small class="text-red-500">
+                                                {{attachmentErrors[index]}}
+                                            </small>
+                                        </div>
                                     </div>
 
                                 </div>

@@ -7,6 +7,12 @@ use Illuminate\Validation\Rules\File;
 
 class StorePostRequest extends FormRequest
 {
+    public static array $extensions = [
+        'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
+        'mp3', 'mp4', 'wav',
+        'doc', 'docx', 'pdf', 'csv', 'xls', 'xlsx', 'ppt',
+        'zip', 'rar',
+    ];
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -27,12 +33,7 @@ class StorePostRequest extends FormRequest
             'attachments' => ['array', 'max:20'],
             'attachments.*' => [
                 'file',
-                File::types([
-                    'jpg', 'jpeg', 'png', 'gif', 'webp',
-                    'mp3', 'mp4', 'wav',
-                    'doc', 'docx', 'pdf', 'csv', 'xls', 'xlsx', 'ppt',
-                    'zip', 'rar',
-                ])->max('500mb')
+                File::types(self::$extensions)->max('500mb')
             ]
             //            'user_id' => ['numeric']
         ];
@@ -49,4 +50,13 @@ class StorePostRequest extends FormRequest
 //    {
 //        $this->merge(['user_id' => auth()->user()->id]);
 //    }
+
+    public function messages(): array
+    {
+        return [
+            'attachments.*.file' => 'This attachment must be a file.',
+            'attachments.*.max' => 'This attachment may not be greater than 500MB.',
+            'attachments.*.mimes' => 'Invalid file type.'
+        ];
+    }
 }
