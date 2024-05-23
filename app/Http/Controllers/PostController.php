@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Enums\PostReactionEnum;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use App\Models\PostAttachment;
+use App\Models\PostReaction;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class PostController extends Controller
 {
@@ -145,5 +148,59 @@ class PostController extends Controller
                 'created_by' => $user->id
             ]);
         }
+    }
+
+    public function postReaction(Post $post, Request $request)
+    {
+        $data = $request->validate([
+            'reaction' => [Rule::enum(PostReactionEnum::class)]
+        ]);
+
+        $user = Auth::user();
+
+        $reaction = PostReaction::where('post_id', $post->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if($reaction && $reaction->reaction !== $data['reaction']) {
+            $reaction->update([
+                'reaction' => $data['reaction']
+            ]);
+
+        } elseif($reaction && $reaction->reaction === $data['reaction']) {
+            $reaction->delete();
+
+        } else {
+            PostReaction::create([
+                'post_id' => $post->id,
+                'user_id' => $user->id,
+                'reaction' => $data['reaction']
+            ]);
+
+        }
+
+        $reactions = PostReaction::where('post_id', $post->id)
+            ->count();
+
+        $likesCount = PostReaction::where('post_id', $post->id)
+            ->where('reaction', 'like')
+            ->count();
+
+        $dislikesCount = PostReaction::where('post_id', $post->id)
+            ->where('reaction', 'dislike')
+            ->count();
+
+        $currentUserReaction = PostReaction::where('post_id', $post->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        return response()->json([
+            'reaction_type' => $currentUserReaction?->reaction,
+            'reactions_count' => [
+                'total' => $reactions,
+                'like' => $likesCount,
+                'dislike' => $dislikesCount,
+            ],
+        ]);
     }
 }

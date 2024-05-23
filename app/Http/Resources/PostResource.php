@@ -14,6 +14,9 @@ class PostResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $userReaction = $this->reactions->first();
+        $userReactionType = $userReaction ? $userReaction->reaction : null;
+
         return [
             'id' => $this->id,
             'body' => $this->body,
@@ -21,7 +24,13 @@ class PostResource extends JsonResource
             'updated_at' => $this->updated_at->format('d-m-Y H:i:s'),
             'user' => new UserResource($this->user),
             'group' => $this->group,
-            'attachments' => PostAttachmentResource::collection($this->attachments)
+            'attachments' => PostAttachmentResource::collection($this->attachments),
+            'reaction_type' => $userReactionType,
+            'reactions_count' => [
+                'total' => $this->reactions_count,
+                'like' => $this->likes_count,
+                'dislike' => $this->dislikes_count,
+            ],
         ];
     }
 }

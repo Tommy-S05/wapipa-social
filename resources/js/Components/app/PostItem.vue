@@ -2,11 +2,12 @@
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
 import {Menu, MenuButton, MenuItems, MenuItem} from '@headlessui/vue'
 import {PencilIcon, TrashIcon, EllipsisVerticalIcon, ArrowDownTrayIcon} from '@heroicons/vue/20/solid'
-import {HandThumbUpIcon, ChatBubbleLeftRightIcon} from '@heroicons/vue/24/outline'
+import {HandThumbUpIcon, HandThumbDownIcon, ChatBubbleLeftRightIcon} from '@heroicons/vue/24/outline'
 import PostUserHeader from "@/Components/app/PostUserHeader.vue";
 import {router} from "@inertiajs/vue3";
 import {isImage} from "@/helpers.js";
 import {DocumentIcon} from "@heroicons/vue/24/solid/index.js";
+import axiosClient from "@/axiosClient.js";
 
 const props = defineProps({
     post: Object
@@ -31,6 +32,18 @@ function deletePost() {
 
 function openAttachment(index) {
     emit('attachmentClick', props.post, index);
+}
+
+function sendReaction(reaction) {
+    axiosClient.post(route('post.reaction', props.post.id), {
+        reaction: reaction
+    }).then(({data}) => {
+        props.post.reaction_type = data.reaction_type;
+        props.post.reactions_count = data.reactions_count;
+        console.log(props.post);
+    }).catch((error) => {
+        console.log(error);
+    });
 }
 
 </script>
@@ -158,10 +171,31 @@ function openAttachment(index) {
         </div>
         <div class="flex gap-2">
             <button
-                class="flex flex-1 gap-1 items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg py-2 px-4 text-gray-800"
+                @click="sendReaction('like')"
+                class="flex flex-1 gap-1 items-center justify-center rounded-lg py-2 px-4 text-gray-800"
+                :class="[
+                    post.reaction_type === 'like' ? 'bg-sky-100 hover:bg-sky-200' : 'bg-gray-100 hover:bg-gray-200'
+                ]"
             >
-                <HandThumbUpIcon class="w-6 h-6 mr-2"/>
-                Like
+                <HandThumbUpIcon class="w-6 h-6"/>
+                <span class="mr-2">
+                {{ post.reactions_count.like }}
+                    <!--{{post.reactions.like_count}}-->
+                </span>
+                {{post.reaction_type !== 'like' ? 'Like' : 'Unlike'}}
+            </button>
+            <button
+                @click="sendReaction('dislike')"
+                class="flex flex-1 gap-1 items-center justify-center rounded-lg py-2 px-4 text-gray-800"
+                :class="[
+                    post.reaction_type === 'dislike' ? 'bg-sky-100 hover:bg-sky-200' : 'bg-gray-100 hover:bg-gray-200'
+                ]"
+            >
+                <HandThumbDownIcon class="w-6 h-6"/>
+                <span class="mr-2">
+                {{ post.reactions_count.dislike }}
+                </span>
+                {{post.reaction_type !== 'dislike' ? 'Dislike' : 'Undislike'}}
             </button>
             <button
                 class="flex flex-1 gap-1 items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg py-2 px-4 text-gray-800"
