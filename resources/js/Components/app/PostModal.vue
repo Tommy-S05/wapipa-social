@@ -59,7 +59,7 @@ const editorConfig = {
  */
 const attachmentFiles = ref([]);
 const attachmentErrors = ref([]);
-const showExtensionsText = ref(false);
+const formErrors = ref({});
 
 const show = computed({
     get: () => props.modelValue,
@@ -69,6 +69,17 @@ const show = computed({
 const computedAttachments = computed(() => {
     return [...attachmentFiles.value, ...(props.post.attachments || [])];
 })
+
+const showExtensionsText = computed(() => {
+   for (const myFile of attachmentFiles.value) {
+       const extension = myFile.file.name.split('.').pop().toLowerCase();
+       if (!attachmentExtensions.includes(extension)) {
+           return true;
+       }
+   }
+
+    return false;
+});
 
 const emit = defineEmits(['update:modelValue', 'hide'])
 
@@ -81,8 +92,8 @@ function closeModal() {
 function resetModal() {
     postForm.reset();
     attachmentFiles.value = [];
+    formErrors.value = {};
     attachmentErrors.value = [];
-    showExtensionsText.value = false;
     props.post?.attachments?.forEach(file => file.deleted = false)
 }
 
@@ -121,8 +132,8 @@ const submit = () => {
 }
 
 function processErrors(errors) {
+    formErrors.value = errors;
     for (const error in errors) {
-
         if (error.includes('.')) {
             const [key, index] = error.split('.');
             attachmentErrors.value[index] = errors[error];
@@ -132,10 +143,6 @@ function processErrors(errors) {
 
 async function onAttachmentChoose(event) {
     for (const file of event.target.files) {
-        const extension = file.name.split('.').pop().toLowerCase();
-        if (!attachmentExtensions.includes(extension)) {
-            showExtensionsText.value = true;
-        }
         const myFile = {
             file,
             url: await readFile(file)
@@ -163,9 +170,10 @@ async function readFile(file) {
 
 }
 
-function removeFile(myFile) {
+function removeFile(myFile, index) {
     if (myFile.file) {
         attachmentFiles.value = attachmentFiles.value.filter((file) => file !== myFile);
+        attachmentErrors.value.splice(index, 1);
     } else {
         postForm.deleted_files_ids.push(myFile.id);
         myFile.deleted = true;
@@ -243,6 +251,12 @@ watch(() => props.post, () => {
                                         <strong>{{ attachmentExtensions.join(', ') }}.</strong>
                                     </div>
 
+                                    <div v-if="formErrors.attachments"
+                                         class="border-l-4 border-red-500 py-2 px-3 bg-red-100 mt-3 text-gray-800"
+                                    >
+                                        {{formErrors.attachments}}
+                                    </div>
+
                                     <div
                                         class="grid gap-3 my-3"
                                         :class="[
@@ -257,7 +271,7 @@ watch(() => props.post, () => {
 
                                                 <!--Delete/Undo bottom-->
                                                 <button
-                                                    @click="myFile.deleted ? undoDelete(myFile) : removeFile(myFile)"
+                                                    @click="myFile.deleted ? undoDelete(myFile) : removeFile(myFile, index)"
                                                     class="w-7 h-7 flex items-center justify-center text-white bg-gray-700 hover:bg-gray-800 rounded-full absolute right-2 top-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-all z-10"
                                                 >
                                                     <ArrowUturnLeftIcon v-if="myFile.deleted" class="w-4 h-4"/>

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Post;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\File;
 
@@ -48,10 +49,20 @@ class UpdatePostRequest extends FormRequest
         //        ]);
         return [
             'body' => ['nullable', 'string'],
-            'attachments' => ['array', 'max:20'],
+            'attachments' => [
+                'array',
+                'max:50',
+                function($attribute, $value, $fail) {
+                    $totalSize = collect($value)->sum(fn(UploadedFile $file) => $file->getSize());
+
+                    if ($totalSize > (1 * 1024 * 1024 * 1024)) {
+                        $fail('The total size of all attachments may not exceed 1GB.');
+                    }
+                },
+            ],
             'attachments.*' => [
                 'file',
-                File::types(self::$extensions)->max('500mb')
+                File::types(self::$extensions)->max('1gb')
             ],
             'deleted_files_ids' => ['array', 'max:20'],
             'deleted_files_ids.*' => 'numeric'
@@ -69,7 +80,7 @@ class UpdatePostRequest extends FormRequest
     {
         return [
             'attachments.*.file' => 'This attachment must be a file.',
-            'attachments.*.max' => 'This attachment may not be greater than 500MB.',
+            'attachments.*.max' => 'This attachment may not be greater than 1GB.',
             'attachments.*.mimes' => 'Invalid file type.'
         ];
     }
