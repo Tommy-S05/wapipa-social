@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Enums\PostReactionEnum;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use App\Http\Resources\CommentResource;
 use App\Models\Post;
 use App\Models\PostAttachment;
 use App\Models\PostReaction;
@@ -202,5 +203,26 @@ class PostController extends Controller
                 'dislike' => $dislikesCount,
             ],
         ]);
+    }
+
+    public function createPostComment(Post $post, Request $request)
+    {
+        $data = $request->validate([
+            'comment' => 'required|string'
+        ]);
+
+        $user = Auth::user();
+
+        $comment = $post->comments()->create([
+            'comment' => nl2br($data['comment']),
+            'user_id' => $user->id
+        ]);
+
+        $comment_count = $post->comments()->count();
+
+        return response()->json([
+            'comment' => new CommentResource($comment),
+            'comments_count' => $comment_count
+        ], 201);
     }
 }

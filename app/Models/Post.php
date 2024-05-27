@@ -59,4 +59,34 @@ class Post extends Model
     {
         return $this->hasMany(PostReaction::class);
     }
+
+//    public function scopeWithReactions(Builder $query, User $user): Builder
+//    {
+//        return $query->with(['reactions' => function($query) use ($user) {
+//            $query->where('user_id', $user->id);
+//        }]);
+//    }
+//
+//    public function scopeWithReactionsCount(Builder $query): Builder
+//    {
+//        return $query->withCount([
+//            'reactions',
+//            'reactions as likes_count' => function($query) {
+//                $query->where('reaction', 'like');
+//            },
+//            'reactions as dislikes_count' => function($query) {
+//                $query->where('reaction', 'dislike');
+//            },
+//        ]);
+//    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function latestComments()
+    {
+        return $this->comments()->latest()->limit(5);
+    }
 }

@@ -23,11 +23,15 @@ class HomeController extends Controller
                 'reactions as dislikes_count' => function($query) {
                     $query->where('reaction', 'dislike');
                 },
+                'comments'
             ])
-            ->with(['reactions' => function($query) use ($user) {
-                $query->where('user_id', $user->id);
-            }])
+            ->with([
+                'reactions' => function($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                }
+            ])
             ->paginate(10);
+
         return Inertia::render('Home', [
             'posts' => PostResource::collection($posts)
         ]);

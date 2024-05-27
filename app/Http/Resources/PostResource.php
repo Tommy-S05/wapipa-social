@@ -31,6 +31,8 @@ class PostResource extends JsonResource
                 'like' => $this->likes_count,
                 'dislike' => $this->dislikes_count,
             ],
+            'comments_count' => $this->comments_count,
+            'comments' => CommentResource::collection($this->latestComments),
         ];
     }
 }
