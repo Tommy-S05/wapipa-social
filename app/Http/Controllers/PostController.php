@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Enums\PostReactionEnum;
 use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdateCommentRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\CommentResource;
+use App\Models\Comment;
 use App\Models\Post;
 use App\Models\PostAttachment;
 use App\Models\PostReaction;
@@ -224,5 +226,29 @@ class PostController extends Controller
             'comment' => new CommentResource($comment),
             'comments_count' => $comment_count
         ], 201);
+    }
+
+    public function deletePostComment(Comment $comment)
+    {
+        if($comment->user_id !== Auth::id()) {
+            return response("You don't have permission to delete this comment", 403);
+        }
+
+        $comment->delete();
+
+        return response()->noContent();
+    }
+
+    public function updatePostComment(Comment $comment, UpdateCommentRequest $request)
+    {
+        $data = $request->validated();
+
+        $comment->update([
+            'comment' => nl2br($data['comment'])
+        ]);
+
+        return response()->json([
+            'comment' => new CommentResource($comment)
+        ]);
     }
 }
