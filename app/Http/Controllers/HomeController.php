@@ -28,6 +28,21 @@ class HomeController extends Controller
             ->with([
                 'reactions' => function($query) use ($user) {
                     $query->where('user_id', $user->id);
+                },
+                'latestComments' => function($query) use ($user) {
+                    $query->withCount([
+                        'reactions',
+                        'reactions as likes_count' => function($query) {
+                            $query->where('reaction', 'like');
+                        },
+                        'reactions as dislikes_count' => function($query) {
+                            $query->where('reaction', 'dislike');
+                        },
+                    ])->with([
+                        'reactions' => function($query) use ($user) {
+                            $query->where('user_id', $user->id);
+                        },
+                    ]);
                 }
             ])
             ->paginate(10);

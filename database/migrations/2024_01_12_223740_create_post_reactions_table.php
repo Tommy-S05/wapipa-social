@@ -10,13 +10,13 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('post_reactions', function(Blueprint $table) {
-            $table->id();
-            $table->foreignId('post_id')->constrained();
-            $table->string('reaction'); //like, dislike, sad, laugh, etc.
-            $table->foreignId('user_id')->constrained();
-            $table->timestamp('created_at')->nullable();
-        });
+//        Schema::create('post_reactions', function(Blueprint $table) {
+//            $table->id();
+//            $table->foreignId('post_id')->constrained();
+//            $table->foreignId('user_id')->constrained();
+//            $table->string('reaction'); //like, dislike, sad, laugh, etc.
+//            $table->timestamp('created_at')->nullable();
+//        });
     }
 
     /**
@@ -24,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('post_reactions');
+//        Schema::dropIfExists('post_reactions');
     }
 };

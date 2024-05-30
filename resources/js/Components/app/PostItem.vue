@@ -1,7 +1,7 @@
 <script setup>
-import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {ArrowDownTrayIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon} from '@heroicons/vue/20/solid'
-import {ChatBubbleLeftRightIcon, HandThumbDownIcon, HandThumbUpIcon} from '@heroicons/vue/24/outline'
+import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
+import {ArrowDownTrayIcon} from '@heroicons/vue/20/solid'
+import {ChatBubbleLeftRightIcon, HandThumbDownIcon, HandThumbUpIcon, ChatBubbleOvalLeftEllipsisIcon} from '@heroicons/vue/24/outline'
 import PostUserHeader from "@/Components/app/PostUserHeader.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {isImage} from "@/helpers.js";
@@ -50,6 +50,17 @@ function sendReaction(reaction) {
     }).then(({data}) => {
         props.post.reaction_type = data.reaction_type;
         props.post.reactions_count = data.reactions_count;
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+
+function sendCommentReaction(comment, reaction) {
+    axiosClient.post(route('comment.reaction', comment.id), {
+        reaction: reaction
+    }).then(({data}) => {
+        comment.reaction_type = data.reaction_type;
+        comment.reactions_count = data.reactions_count;
     }).catch((error) => {
         console.log(error);
     });
@@ -168,28 +179,28 @@ function deleteComment(comment) {
                     @click="sendReaction('like')"
                     class="flex flex-1 gap-1 items-center justify-center rounded-lg py-2 px-4 text-gray-800"
                     :class="[
-                    post.reaction_type === 'like' ? 'bg-sky-100 hover:bg-sky-200' : 'bg-gray-100 hover:bg-gray-200'
-                ]"
+                        post.reaction_type === 'like' ? 'bg-sky-100 hover:bg-sky-200' : 'bg-gray-100 hover:bg-gray-200'
+                    ]"
                 >
                     <HandThumbUpIcon class="w-6 h-6"/>
                     <span class="mr-2">
-                    {{ post.reactions_count.like }}
+                        {{ post.reactions_count.like }}
                         <!--{{post.reactions.like_count}}-->
-                </span>
-                    {{ post.reaction_type !== 'like' ? 'Like' : 'Unlike' }}
+                    </span>
+                    Like
                 </button>
                 <button
                     @click="sendReaction('dislike')"
                     class="flex flex-1 gap-1 items-center justify-center rounded-lg py-2 px-4 text-gray-800"
                     :class="[
-                    post.reaction_type === 'dislike' ? 'bg-sky-100 hover:bg-sky-200' : 'bg-gray-100 hover:bg-gray-200'
-                ]"
+                        post.reaction_type === 'dislike' ? 'bg-sky-100 hover:bg-sky-200' : 'bg-gray-100 hover:bg-gray-200'
+                    ]"
                 >
                     <HandThumbDownIcon class="w-6 h-6"/>
                     <span class="mr-2">
-                    {{ post.reactions_count.dislike }}
-                </span>
-                    {{ post.reaction_type !== 'dislike' ? 'Dislike' : 'Undislike' }}
+                        {{ post.reactions_count.dislike }}
+                    </span>
+                    Dislike
                 </button>
 
                 <DisclosureButton
@@ -231,6 +242,7 @@ function deleteComment(comment) {
                 <!--Comments-->
                 <div class="space-y-4">
                     <div v-for="comment of post.comments" :key="comment.id">
+                        <!--Comment Header Section-->
                         <div class="flex justify-between gap-2">
                             <div class="flex gap-2">
                                 <a href="javascript:void(0)">
@@ -259,49 +271,81 @@ function deleteComment(comment) {
                             />
                         </div>
 
-                        <div v-if="editingComment?.id === comment.id"
-                            class="ml-12"
-                        >
-                            <TextareaInput
-                                v-model="editingComment.comment"
-                                :rows="1"
-                                placeholder="Write a comment..."
-                                auto-resize
-                                class="w-full max-h-40 resize-none"
-                            />
+                        <!--Comment Body Section-->
+                        <div class="pl-12">
+                            <!--Edit Comment Section-->
+                            <div v-if="editingComment?.id === comment.id">
+                                <TextareaInput
+                                    v-model="editingComment.comment"
+                                    :rows="1"
+                                    placeholder="Write a comment..."
+                                    auto-resize
+                                    class="w-full max-h-40 resize-none"
+                                />
 
-                            <div class="flex justify-end">
-                                <DangerButton
-                                    @click="editingComment = {}"
-                                    class="rounded-r-none"
-                                >
-                                    Cancel
-                                </DangerButton>
-                                <IndigoButton
-                                    @click="updateComment"
-                                    class="w-28 max-w-28 rounded-l-none"
-                                >
-                                    Update
-                                </IndigoButton>
+                                <div class="flex justify-end">
+                                    <DangerButton
+                                        @click="editingComment = {}"
+                                        class="rounded-r-none"
+                                    >
+                                        Cancel
+                                    </DangerButton>
+                                    <IndigoButton
+                                        @click="updateComment"
+                                        class="w-28 max-w-28 rounded-l-none"
+                                    >
+                                        Update
+                                    </IndigoButton>
+                                </div>
+
+                                <!--                            <div class="flex gap-2 justify-end">-->
+                                <!--                                <button class="rounded-r-none text-indigo-500" @click="editingComment = {}">-->
+                                <!--                                    cancel-->
+                                <!--                                </button>-->
+                                <!--                                <IndigoButton-->
+                                <!--                                    @click="createComment"-->
+                                <!--                                    class="w-28 max-w-28"-->
+                                <!--                                >-->
+                                <!--                                    update-->
+                                <!--                                </IndigoButton>-->
+                                <!--                            </div>-->
                             </div>
 
-<!--                            <div class="flex gap-2 justify-end">-->
-<!--                                <button class="rounded-r-none text-indigo-500" @click="editingComment = {}">-->
-<!--                                    cancel-->
-<!--                                </button>-->
-<!--                                <IndigoButton-->
-<!--                                    @click="createComment"-->
-<!--                                    class="w-28 max-w-28"-->
-<!--                                >-->
-<!--                                    update-->
-<!--                                </IndigoButton>-->
-<!--                            </div>-->
-                        </div>
+                            <!--Comment Content Section-->
+                            <ReadMoreReadLess
+                                v-else
+                                :content="comment?.comment"
+                                content-class="text-sm flex flex-1"
+                            />
 
-                        <ReadMoreReadLess v-else
-                            :content="comment?.comment"
-                            content-class="text-sm flex flex-1 ml-12"
-                        />
+                            <!--Comment Reaction Section-->
+                            <div class="flex gap-2 mt-1">
+                                <button class="flex items-center text-xs text-indigo-500 px-1 py-0.5 rounded-lg"
+                                        :class="[
+                                            comment.reaction_type === 'like' ? 'bg-indigo-50 hover:bg-indigo-100' : 'hover:bg-indigo-50'
+                                        ]"
+                                        @click="sendCommentReaction(comment, 'like')"
+                                >
+                                    <HandThumbUpIcon class="w-3 h-3 mr-1"/>
+                                    <span class="mr-2">{{ comment.reactions_count.like }}</span>
+                                    Like
+                                </button>
+                                <button class="flex items-center text-xs text-indigo-500 px-1 py-0.5 rounded-lg"
+                                        :class="[
+                                            comment.reaction_type === 'dislike' ? 'bg-indigo-50 hover:bg-indigo-100' : 'hover:bg-indigo-50'
+                                        ]"
+                                        @click="sendCommentReaction(comment, 'dislike')"
+                                >
+                                    <HandThumbDownIcon class="w-3 h-3 mr-1"/>
+                                    <span class="mr-2">{{ comment.reactions_count.dislike }}</span>
+                                    Dislike
+                                </button>
+                                <button class="flex items-center text-xs text-indigo-500 px-1 py-0.5 hover:bg-indigo-100 rounded-lg">
+                                    <ChatBubbleOvalLeftEllipsisIcon class="w-3 h-3 mr-1"/>
+                                    Reply
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </DisclosurePanel>

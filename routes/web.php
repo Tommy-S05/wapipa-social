@@ -48,11 +48,14 @@ Route::middleware('auth')->group(function() {
     Route::post('/post/{post}/comment', [PostController::class, 'createPostComment'])
         ->name('post.comment.create');
 
-    Route::delete('/comment/{comment}', [PostController::class, 'deletePostComment'])
+    Route::delete('/post/{comment}/comment', [PostController::class, 'deletePostComment'])
         ->name('post.comment.delete');
 
-    Route::put('/comment/{comment}', [PostController::class, 'updatePostComment'])
+    Route::put('/post/{comment}/comment', [PostController::class, 'updatePostComment'])
         ->name('post.comment.update');
+
+    Route::post('/comment/{comment}/reaction', [PostController::class, 'commentReaction'])
+        ->name('comment.reaction');
 });
 
 require __DIR__.'/auth.php';

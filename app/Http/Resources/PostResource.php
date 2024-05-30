@@ -15,7 +15,7 @@ class PostResource extends JsonResource
     public function toArray(Request $request): array
     {
         $userReaction = $this->reactions->first();
-        $userReactionType = $userReaction ? $userReaction->reaction : null;
+        $userReactionType = $userReaction ? $userReaction->reaction->value : null;
 
         return [
             'id' => $this->id,

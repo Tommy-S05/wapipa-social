@@ -15,6 +15,9 @@ class CommentResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $userReaction = $this->reactions->first();
+        $userReactionType = $userReaction ? $userReaction->reaction->value : null;
+
         return [
             'id' => $this->id,
             'comment' => $this->comment,
@@ -24,6 +27,13 @@ class CommentResource extends JsonResource
                 "username" => $this->user->username,
                 "avatar_url" => $this->user->avatar_path ? Storage::url($this->user->avatar_path) : null
             ],
+            'reaction_type' => $userReactionType,
+            'reactions_count' => [
+                'total' => $this->reactions_count,
+                'like' => $this->likes_count,
+                'dislike' => $this->dislikes_count,
+            ],
+//            'comments_count' => $this->comments_count,
             'created_at' => $this->created_at->format('d-m-Y H:i:s'),
             'updated_at' => $this->updated_at->format('d-m-Y H:i:s'),
         ];

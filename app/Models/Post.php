@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -55,10 +56,15 @@ class Post extends Model
         return $this->hasMany(PostAttachment::class)->latest();
     }
 
-    public function reactions(): HasMany
+    public function reactions(): MorphMany
     {
-        return $this->hasMany(PostReaction::class);
+        return $this->morphMany(Reaction::class, 'reactable');
     }
+
+//    public function reactions(): HasMany
+//    {
+//        return $this->hasMany(PostReaction::class);
+//    }
 
 //    public function scopeWithReactions(Builder $query, User $user): Builder
 //    {
