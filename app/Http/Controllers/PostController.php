@@ -159,17 +159,24 @@ class PostController extends Controller
         return $this->createReaction($request, $post);
     }
 
-    public function createPostComment(Post $post, Request $request)
+    public function createComment(Post $post, Request $request)
     {
         $data = $request->validate([
-            'comment' => 'required|string'
+            'comment' => 'required|string',
+            'parent_id' => 'nullable|exists:comments,id'
         ]);
 
         $user = Auth::user();
 
+        //$comment = $post->comments()->create([
+        //    'comment' => nl2br($data['comment']),
+        //    'user_id' => $user->id
+        //]);
+
         $comment = $post->comments()->create([
             'comment' => nl2br($data['comment']),
-            'user_id' => $user->id
+            'user_id' => $user->id,
+            'parent_id' => $data['parent_id']
         ]);
 
         $comment_count = $post->comments()->count();
@@ -180,7 +187,7 @@ class PostController extends Controller
         ], 201);
     }
 
-    public function deletePostComment(Comment $comment)
+    public function deleteComment(Comment $comment)
     {
         if($comment->user_id !== Auth::id()) {
             return response("You don't have permission to delete this comment", 403);
@@ -191,7 +198,7 @@ class PostController extends Controller
         return response()->noContent();
     }
 
-    public function updatePostComment(Comment $comment, UpdateCommentRequest $request)
+    public function updateComment(Comment $comment, UpdateCommentRequest $request)
     {
         $data = $request->validated();
 

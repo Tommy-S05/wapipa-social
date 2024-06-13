@@ -21,6 +21,7 @@ class CommentResource extends JsonResource
         return [
             'id' => $this->id,
             'comment' => $this->comment,
+            'comments' => CommentResource::collection($this->comments()->latest()->limit(5)->get()),
             'user' => [
                 "id" => $this->user->id,
                 "name" => $this->user->name,
@@ -33,7 +34,7 @@ class CommentResource extends JsonResource
                 'like' => $this->likes_count,
                 'dislike' => $this->dislikes_count,
             ],
-//            'comments_count' => $this->comments_count,
+            'comments_count' => $this->comments_count,
             'created_at' => $this->created_at->format('d-m-Y H:i:s'),
             'updated_at' => $this->updated_at->format('d-m-Y H:i:s'),
         ];
