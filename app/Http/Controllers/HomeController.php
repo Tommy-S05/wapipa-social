@@ -24,15 +24,16 @@ class HomeController extends Controller
                 'reactions as dislikes_count' => function($query) {
                     $query->where('reaction', 'dislike');
                 },
-                'comments'
+                //'comments'
             ])
             ->with([
                 'reactions' => function($query) use ($user) {
                     $query->where('user_id', $user->id);
                 },
-                'latestComments' => function($query) use ($user) {
+                'comments' => function($query) use ($user) {
                     /** @var Builder $query */
-                    $query->whereNull('parent_id')
+                    $query
+                        //->whereNull('parent_id')
                         ->withCount([
                             'reactions',
                             'reactions as likes_count' => function($query) {
@@ -41,15 +42,10 @@ class HomeController extends Controller
                             'reactions as dislikes_count' => function($query) {
                                 $query->where('reaction', 'dislike');
                             },
-                            'comments'
-                        ])->with([
-                            'reactions' => function($query) use ($user) {
-                                $query->where('user_id', $user->id);
-                            },
                         ]);
                 }
             ])
-            ->paginate(10);
+            ->paginate(1);
 
         return Inertia::render('Home', [
             'posts' => PostResource::collection($posts)
