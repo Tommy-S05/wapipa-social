@@ -38,8 +38,8 @@ class CommentResource extends JsonResource
                 'like' => $this->likes_count,
                 'dislike' => $this->dislikes_count,
             ],
-//            'comments_count' => count($this->child_comments), // TODO count all subcomments
-            'comments_count' => $this->comments_count, // TODO count all subcomments
+//            'comments_count' => count($this->child_comments),
+            'comments_count' => $this->comments_count,
             'created_at' => $this->created_at->format('d-m-Y H:i:s'),
             'updated_at' => $this->updated_at->format('d-m-Y H:i:s'),
         ];
