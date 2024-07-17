@@ -25,6 +25,8 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['comment-created', 'comment-delete']);
+
 const authUser = usePage().props.auth.user;
 
 const newCommentText = ref('');
@@ -45,6 +47,7 @@ function createComment() {
         }
 
         props.post.comments_count++;
+        emit('comment-created', data.comment);
 
     }).catch((error) => {
         console.log(error);
@@ -84,6 +87,8 @@ function deleteComment(comment) {
                 }
 
                 props.post.comments_count--;
+                emit('comment-delete', comment);
+
 
             })
             .catch((error) => {
@@ -101,6 +106,19 @@ function sendCommentReaction(comment, reaction) {
     }).catch((error) => {
         console.log(error);
     });
+}
+
+function onCommentCreated(comment) {
+    if (props.parentComment) {
+        props.parentComment.comments_count++;
+    }
+    emit('comment-created', comment);
+}
+function onCommentDelete(comment) {
+    if (props.parentComment) {
+        props.parentComment.comments_count--;
+    }
+    emit('comment-delete', comment);
 }
 
 </script>
@@ -250,6 +268,8 @@ function sendCommentReaction(comment, reaction) {
                             :post="post"
                             :data="{comments: comment.comments}"
                             :parent-comment="comment"
+                            @comment-created="onCommentCreated"
+                            @comment-delete="onCommentDelete"
                         />
                     </DisclosurePanel>
                 </Disclosure>

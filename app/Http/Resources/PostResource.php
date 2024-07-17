@@ -54,7 +54,7 @@ class PostResource extends JsonResource
                 $children = self::convertCommentIntoTree($comments, $comment->id);
                 $comment->child_comments = $children;
 //                $comment->comments_count = collect($children)->sum('comments_count');
-                $comment->comments_count = collect($children)->sum('num_of_comments') + count($children);
+                $comment->comments_count = collect($children)->sum('comments_count') + count($children);
                 //$comment->setAttribute('comments', $children);
 //                $commentTree[] = $comment;
                 $commentTree[] = new CommentResource($comment);

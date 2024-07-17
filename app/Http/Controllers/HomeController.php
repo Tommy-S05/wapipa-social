@@ -45,7 +45,7 @@ class HomeController extends Controller
                         ]);
                 }
             ])
-            ->paginate(1);
+            ->paginate(10);
 
         return Inertia::render('Home', [
             'posts' => PostResource::collection($posts)
