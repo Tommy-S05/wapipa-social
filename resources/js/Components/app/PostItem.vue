@@ -121,7 +121,7 @@ function sendReaction(reaction) {
             </div>
 
             <!--Comments Section-->
-            <DisclosurePanel class="mt-3">
+            <DisclosurePanel class="comment-list mt-3 max-h-96 overflow-auto">
                 <CommentList
                     :post="post"
                     :data="{comments: post.comments}"

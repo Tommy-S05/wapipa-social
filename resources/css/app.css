@@ -105,3 +105,17 @@
     text-decoration: underline;
     color: #4b9afa;
 }
+
+/* WebKit Browser (Chrome, Safari) */
+.comment-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.comment-list::-webkit-scrollbar-thumb {
+    background: #A2C3DE; /* Thumb color */
+    border-radius: 6px;
+}
+
+.comment-list::-webkit-scrollbar-track {
+    background: #F1F1F3; /* Track color */
+}
