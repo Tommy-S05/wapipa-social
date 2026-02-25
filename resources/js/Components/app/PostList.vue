@@ -1,9 +1,17 @@
 <script setup>
 import PostItem from "@/Components/app/PostItem.vue";
 import PostModal from "@/Components/app/PostModal.vue";
-import {ref} from "vue";
+import { onMounted, ref } from "vue";
 import {usePage} from "@inertiajs/vue3";
 import AttachmentPreviewModal from "@/Components/app/AttachmentPreviewModal.vue";
+import axiosClient from "@/axiosClient.js";
+
+const page = usePage();
+
+const allPosts = ref({
+    data: page.props.posts.data,
+    next: page.props.posts.links.next
+})
 
 defineProps({
     posts: {
@@ -16,6 +24,7 @@ const showEditModal = ref(false);
 const showAttachmentsModal = ref(false);
 const editPost = ref({});
 const previewAttachmentsPost = ref({});
+const loadMoreIntersectRef = ref(null);
 
 function openEditModal(post){
     editPost.value = post;
@@ -39,22 +48,47 @@ function onModalHide() {
     };
 }
 
+function loadMore() {
+    if (!allPosts.value.next) {
+        return;
+    }
+
+    axiosClient.get(allPosts.value.next)
+        .then(response => {
+            allPosts.value.data = [...allPosts.value.data, ...response.data.data];
+            allPosts.value.next = response.data.links.next;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+onMounted(() => {
+   const observer = new IntersectionObserver(
+       (entries) => entries.forEach(entry => entry.isIntersecting && loadMore()), {
+       rootMargin: '-250px 0px 0px 0px',
+   });
+
+   observer.observe(loadMoreIntersectRef.value);
+});
+
 </script>
 
 <template>
-    <div class="space-y-4 mb-3 flex-1 overflow-auto">
-        <PostItem v-for="post of posts" :key="post.id" :post="post"
+    <div class="space-y-4 flex-1 overflow-auto">
+        <PostItem v-for="post of allPosts.data" :key="post.id" :post="post"
                   @editClick="openEditModal"
                   @attachmentClick="openAttachmentPreviewModal"
         />
-    </div>
+        <div ref="loadMoreIntersectRef"></div>
 
-    <PostModal :post="editPost" v-model="showEditModal" @hide="onModalHide"/>
-    <AttachmentPreviewModal
-        :attachments="previewAttachmentsPost.post?.attachments || []"
-        v-model:index="previewAttachmentsPost.index"
-        v-model="showAttachmentsModal"
-    />
+        <PostModal :post="editPost" v-model="showEditModal" @hide="onModalHide"/>
+        <AttachmentPreviewModal
+            :attachments="previewAttachmentsPost.post?.attachments || []"
+            v-model:index="previewAttachmentsPost.index"
+            v-model="showAttachmentsModal"
+        />
+    </div>
 </template>
 
 <style scoped>

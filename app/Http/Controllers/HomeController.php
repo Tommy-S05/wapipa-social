@@ -45,7 +45,11 @@ class HomeController extends Controller
                         ]);
                 }
             ])
-            ->paginate(10);
+            ->paginate(3);
+
+        if($request->wantsJson()) {
+            return PostResource::collection($posts);
+        }
 
         return Inertia::render('Home', [
             'posts' => PostResource::collection($posts)
